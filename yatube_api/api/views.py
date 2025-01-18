@@ -1,8 +1,9 @@
-from api.serializers import CommentSerializer, GroupSerializer, PostSerializer
-from api.utils.mixins.AuthorPermissionMixin import AuthorPermissionMixin
 from django.shortcuts import get_object_or_404
-from posts.models import Comment, Group, Post
 from rest_framework import viewsets
+
+from api.serializers import CommentSerializer, GroupSerializer, PostSerializer
+from api.utils.mixins.author_permission_mixin import AuthorPermissionMixin
+from posts.models import Comment, Group, Post
 
 
 class PostViewSet(AuthorPermissionMixin, viewsets.ModelViewSet):
