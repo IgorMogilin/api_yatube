@@ -1,12 +1,11 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
-
 from api.serializers import CommentSerializer, GroupSerializer, PostSerializer
+from api.utils.mixins.AuthorPermissionMixin import AuthorPermissionMixin
+from django.shortcuts import get_object_or_404
 from posts.models import Comment, Group, Post
+from rest_framework import viewsets
 
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(AuthorPermissionMixin, viewsets.ModelViewSet):
     """Вьюсет для обьектов модели Post."""
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -15,18 +14,6 @@ class PostViewSet(viewsets.ModelViewSet):
         """Сохраняет новый объект Post с установленным автором."""
         serializer.save(author=self.request.user)
 
-    def perform_update(self, serializer):
-        """Обновляет существующий объект Post, если пользователь - автор."""
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        super().perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        """Удаляет объект Post, если текущий пользователь является автором."""
-        if instance.author != self.request.user:
-            raise PermissionDenied('Удаление чужого контента запрещено!')
-        super().perform_destroy(instance)
-
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для обьектов модели Group."""
@@ -34,7 +21,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(AuthorPermissionMixin, viewsets.ModelViewSet):
     """Вьюсет для обьектов модели Comment."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -50,15 +37,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Сохраняет комментарий с автором и связанной записью Post."""
         serializer.save(author=self.request.user, post=self.get_post())
-
-    def perform_update(self, serializer):
-        """Обновляет существующий комментарий, если пользователь - автор."""
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        super().perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        """Удаляет комментарий, если текущий пользователь является автором."""
-        if instance.author != self.request.user:
-            raise PermissionDenied('Удаление чужого контента запрещено!')
-        super().perform_destroy(instance)
